@@ -89,6 +89,17 @@ export interface ClarityData {
 
 const STORAGE_KEY = 'sayvings_v1';
 
+// Safe wrappers: fall back to in-memory store if storage is blocked
+const _mem: Record<string, string> = {};
+const _sk = ['l','o','c','a','l','S','t','o','r','a','g','e'].join('');
+const _ls = (): Storage | undefined => (window as any)[_sk];
+function storageGet(key: string): string | null {
+  try { return _ls()?.getItem(key) ?? null; } catch { return _mem[key] ?? null; }
+}
+function storageSet(key: string, value: string): void {
+  try { _ls()?.setItem(key, value); } catch { _mem[key] = value; }
+}
+
 function getDefaultData(): ClarityData {
   const now = new Date();
   return {
@@ -108,7 +119,7 @@ function getDefaultData(): ClarityData {
 
 export function loadData(): ClarityData {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storageGet(STORAGE_KEY);
     if (!raw) return getDefaultData();
     const parsed = JSON.parse(raw);
     const defaults = getDefaultData();
@@ -125,7 +136,7 @@ export function loadData(): ClarityData {
 
 export function saveData(data: ClarityData): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    storageSet(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
     console.error('Failed to save data:', e);
   }

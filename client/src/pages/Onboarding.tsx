@@ -279,7 +279,7 @@ function CompletionDashboard({ data, onEnter }: { data: SummaryData; onEnter: ()
               Set up your first budget category
             </p>
             <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-              Takes 2 minutes -- helps Finn give better advice
+              Takes 2 minutes and helps Finn give you better advice
             </p>
           </div>
         </div>
@@ -346,7 +346,7 @@ function CompletionDashboard({ data, onEnter }: { data: SummaryData; onEnter: ()
           <ArrowRight size={16} />
         </button>
         <p className="text-xs text-center mt-2" style={{ color: 'var(--text-faint)' }}>
-          Your data lives on this device -- always private
+          Your data lives on this device, always private
         </p>
       </div>
     </div>
@@ -422,6 +422,9 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
     }));
 
   // ── Undo ─────────────────────────────────────────────────────────────────
+  const [rollbackCount, setRollbackCount] = useState(0);
+  const rollbackStageRef = useRef<Stage | null>(null);
+
   const handleUndo = () => {
     setMsgs(m => {
       const lastUserIdx = m.map(x => x.kind).lastIndexOf('user');
@@ -434,23 +437,23 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
     });
     setInputActive(false);
     setInputValue('');
-    setStage(prev => (ROLLBACK[prev] as Stage) || prev);
+    const target = (ROLLBACK[stage] as Stage) || stage;
+    rollbackStageRef.current = target;
+    setStage(target);
+    setRollbackCount(c => c + 1);
   };
 
   // ── Stage re-run on rollback ──────────────────────────────────────────────
-  const prevStageRef = useRef<Stage>('intro');
   useEffect(() => {
-    if (prevStageRef.current === stage) return;
-    prevStageRef.current = stage;
-    if (stage !== 'intro') runStage(stage);
-  }, [stage]);
+    if (rollbackCount === 0) return;
+    const s = rollbackStageRef.current;
+    if (s && s !== 'intro') runStage(s);
+  }, [rollbackCount]);
 
   // ── Kick off ─────────────────────────────────────────────────────────────
   useEffect(() => {
     const run = async () => {
-      await say("Hey! I'm Finn 👋", 800);
-      await say("Think of me as that one friend who's actually good with money -- but way less annoying about it 😄", 1200);
-      await say("I'll just need your name, income, any debts, and a goal you're saving toward. Takes about 2 minutes.", 1000);
+      await say("Hey! I'm Finn 👋 Think of me as that one friend who's actually good with money, but way less annoying about it 😄", 900);
       setStage('ask-name');
     };
     run();
@@ -477,7 +480,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
     }
     if (s === 'ask-debt') {
       const monthly = Math.round(income / 12);
-      await say(`So about $${monthly.toLocaleString()} a month before tax -- got it. 💪`, 700);
+      await say(`So about $${monthly.toLocaleString()} a month before tax - got it. 💪`, 700);
       await ask("Any debts right now? Credit cards, loans… no judgment here, I promise.", [
         { label: "Yeah, a few 💳", value: 'yes' },
         { label: "Just one", value: 'one' },
@@ -552,7 +555,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
         'Pay Off Debt':       [{label:'$2,000',value:'2000'},{label:'$5,000',value:'5000'},{label:'$10,000',value:'10000'}],
       };
       const amounts = defaults[goalName] || [{label:'$1,000',value:'1000'},{label:'$5,000',value:'5000'},{label:'$10,000',value:'10000'}];
-      await ask(`${goalName} -- solid. How much are you aiming for?`, [
+      await ask(`${goalName} Nice. How much are you aiming for?`, [
         ...amounts,
         { label: 'My own number', value: '__custom__' },
       ], 'goal-contrib', 700, {
@@ -565,7 +568,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
       const s5  = Math.max(25,  Math.round(monthly * 0.05 / 25)  * 25);
       const s10 = Math.max(50,  Math.round(monthly * 0.10 / 50)  * 50);
       const s15 = Math.max(75,  Math.round(monthly * 0.15 / 50)  * 50);
-      await ask(`$${goalTarget.toLocaleString()} -- I like it. How much can you put toward this each month?`, [
+      await ask(`$${goalTarget.toLocaleString()} Love it. How much can you put toward this each month?`, [
         { label: `$${s5.toLocaleString()}`,  sub: '~5% of income',  value: String(s5)  },
         { label: `$${s10.toLocaleString()}`, sub: '~10% of income', value: String(s10) },
         { label: `$${s15.toLocaleString()}`, sub: '~15% of income', value: String(s15) },
@@ -645,8 +648,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
       const yearly = parseFloat(value) || 0;
       setIncome(yearly);
       const monthly = Math.round(yearly / 12);
-      await say(`Nice -- about $${monthly.toLocaleString()} a month before tax. That's your starting point. 💪`, 800);
-      await ask("Any debts to tell me about? Credit cards, loans -- totally no judgment.", [
+      await ask(`Nice, about $${monthly.toLocaleString()}/mo before tax. Any debts right now? Credit cards, loans, no judgment at all 😊`, [
         { label: "Yeah, a few 💳", value: 'yes' },
         { label: "Just one", value: 'one' },
         { label: "Nope, debt-free! 🙌", value: 'no' },
@@ -658,7 +660,6 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
     // has debt?
     if (s === 'debt-type') {
       if (value === 'no') {
-        await say("Debt-free! Love that for you. 🙌", 600);
         setStage('ask-goal');
         return;
       }
@@ -722,8 +723,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
         minPayment: Math.max(25, Math.round(debt.balance * 0.02)), type: 'credit_card',
       };
       setDebts(prev => [...prev, newDebt]);
-      await say(`${debt.name} at ${apr}% -- logged. 📝`, 700);
-      await ask("Any other debts?", [
+      await ask(`${debt.name} at ${apr}% logged 📝 Any other debts?`, [
         { label: 'Add another ➕', value: 'yes' },
         { label: "That's all ✅", value: 'no' },
       ], 'ask-goal', 700);
@@ -749,8 +749,8 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
         return;
       }
       const total = debts.length;
-      if (total > 0) await say(`Got it -- ${total} debt${total !== 1 ? 's' : ''} on the list. We'll build a payoff plan together.`, 700);
-      await ask("What's the main thing you're saving for?", [
+      const debtAck = total > 0 ? `Got it, ${total} debt${total !== 1 ? 's' : ''} logged. Now the fun part: ` : '';
+      await ask(`${debtAck}What's the main thing you're saving for?`, [
         { label: 'Emergency fund', emoji: '🛡️', sub: 'Safety net everyone needs', value: 'Emergency Fund' },
         { label: 'House / down payment', emoji: '🏠', value: 'House Down Payment' },
         { label: 'Vacation', emoji: '✈️', value: 'Vacation' },
@@ -777,7 +777,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
         'Pay Off Debt':       [{label:'$2,000',value:'2000'},{label:'$5,000',value:'5000'},{label:'$10,000',value:'10000'}],
       };
       const amounts = defaults[gName] || [{label:'$1,000',value:'1000'},{label:'$5,000',value:'5000'},{label:'$10,000',value:'10000'}];
-      await ask(`${gName} -- solid choice. How much are you aiming for?`, [
+      await ask(`${gName} solid choice! How much are you aiming for?`, [
         ...amounts,
         { label: 'My own number', value: '__custom__' },
       ], 'goal-contrib', 700, {
@@ -796,7 +796,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
       const s5  = Math.max(25,  Math.round(monthly * 0.05 / 25)  * 25);
       const s10 = Math.max(50,  Math.round(monthly * 0.10 / 50)  * 50);
       const s15 = Math.max(75,  Math.round(monthly * 0.15 / 50)  * 50);
-      await ask(`$${target.toLocaleString()} -- I like it. How much can you put toward this each month?`, [
+      await ask(`$${target.toLocaleString()} Love it. How much can you put toward this each month?`, [
         { label: `$${s5.toLocaleString()}`,  sub: '~5% of income',  value: String(s5)  },
         { label: `$${s10.toLocaleString()}`, sub: '~10% of income', value: String(s10) },
         { label: `$${s15.toLocaleString()}`, sub: '~15% of income', value: String(s15) },
@@ -817,8 +817,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
       reachDate.setMonth(reachDate.getMonth() + months);
       const reachDateStr = reachDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-      await say(`At $${contrib}/mo you'll hit your goal by ${reachDateStr}. ${months <= 6 ? "That's so close!" : "Totally doable."} 🎯`, 900);
-      await say(`Alright ${firstName || 'friend'} -- I put your plan together. Here's a preview 👇`, 1100);
+      await say(`At $${contrib}/mo you'll hit your goal by ${reachDateStr}. ${months <= 6 ? "That's so close!" : "Totally doable."} 🎯 Here's your plan, ${firstName || 'friend'} 👇`, 1000);
 
       const now = new Date();
       const monthly = Math.round(income / 12);
@@ -860,6 +859,42 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
     }
   };
 
+  // ── Free question handler (mid-onboarding) ─────────────────────────────
+  const [freeQ, setFreeQ] = useState('');
+  const freeQRef = useRef<HTMLInputElement>(null);
+
+  const finnQuickAnswer = (q: string): string => {
+    const lower = q.toLowerCase();
+    if (/\bwhy\b.*(name|called)/.test(lower) || /what.*sayvings/.test(lower))
+      return 'Sayvings is a play on "sayings" and "savings". The idea is that your money intentions should match what you actually do. Simple as that 😄';
+    if (/what.*(need|ask|collect|data|info)/.test(lower) || /why.*asking/.test(lower))
+      return 'Just your name, income, any debts, and a savings goal. Nothing leaves your device, ever.';
+    if (/private|safe|secure|data|stored|share/.test(lower))
+      return 'Everything stays on your device, stored locally. No account, no server, no sharing. Just you and your numbers 🔒';
+    if (/how long|take long|quick|fast|2 min/.test(lower))
+      return 'About 2 minutes, maybe less if you tap fast 😄 Just a handful of questions.';
+    if (/debt|owe|loan|credit/.test(lower))
+      return "No worries about debt, I don't judge. Once you tell me what you have, I'll help you build a payoff plan that actually works.";
+    if (/income|salary|pay|earn/.test(lower))
+      return "I ask for your yearly salary so I can estimate a realistic monthly budget and savings plan. I won't share it with anyone.";
+    if (/goal|saving for|save/.test(lower))
+      return "Your goal is the whole point. Once I know what you're working toward, everything else in the app organises around it.";
+    if (/skip|optional|must|have to/.test(lower))
+      return "You can always update things later inside the app, so just give me your best estimate for now. Nothing is set in stone.";
+    if (/hi|hello|hey/.test(lower))
+      return "Hey! Ask me anything while we set up, I'm here 👋";
+    return "Good question! I'm best at answering things about your finances once we're done setting up. But if you have a quick question about this process, fire away.";
+  };
+
+  const handleFreeQuestion = async () => {
+    const q = freeQ.trim();
+    if (!q) return;
+    setFreeQ('');
+    push({ kind: 'user', text: q });
+    const answer = finnQuickAnswer(q);
+    await say(answer, 700);
+  };
+
   // Auto-scroll
   useEffect(() => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 60);
@@ -896,7 +931,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
           </div>
           <div>
             <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Finn</p>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Your Sayvings buddy · always here for you</p>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Your Sayvings buddy, always here for you</p>
           </div>
         </div>
       </div>
@@ -1004,8 +1039,39 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
           <CompletionDashboard data={summaryData} onEnter={onComplete} />
         )}
 
-        <div ref={bottomRef} style={{ height: 24 }} />
+        <div ref={bottomRef} style={{ height: 8 }} />
       </div>
+
+      {/* Free question bar */}
+      {stage !== 'done' && (
+        <div className="flex-shrink-0 px-4 py-3"
+          style={{ borderTop: '1px solid var(--divider)', background: 'white' }}>
+          <div className="flex items-center gap-2 rounded-2xl px-4 py-2.5"
+            style={{ background: 'var(--surface-2)', border: '1.5px solid var(--divider)' }}>
+            <input
+              ref={freeQRef}
+              type="text"
+              value={freeQ}
+              onChange={e => setFreeQ(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleFreeQuestion()}
+              placeholder="Ask Finn anything..."
+              className="flex-1 bg-transparent text-sm outline-none"
+              style={{ color: 'var(--text-primary)' }}
+            />
+            <button
+              onClick={handleFreeQuestion}
+              disabled={!freeQ.trim()}
+              className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
+              style={{
+                background: freeQ.trim() ? 'var(--teal)' : 'transparent',
+                color: freeQ.trim() ? 'white' : 'var(--text-faint)',
+              }}>
+              <Send size={14} />
+            </button>
+          </div>
+          <p className="text-center text-xs mt-1.5" style={{ color: 'var(--text-faint)' }}>Got a question? Just ask</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -90,7 +90,7 @@ function allocateWindfall(amount: number, data: ClarityData): { items: {label: s
     if (remaining <= 0) break;
     const pay = Math.min(remaining, d.balance);
     if (pay > 50) {
-      items.push({ label: `Pay ${d.name}`, amount: pay, reason: `${d.apr}% APR -- highest return guaranteed` });
+      items.push({ label: `Pay ${d.name}`, amount: pay, reason: `${d.apr}% APR, highest return guaranteed` });
       remaining -= pay;
     }
   }
@@ -114,7 +114,7 @@ function allocateWindfall(amount: number, data: ClarityData): { items: {label: s
     if (remaining <= 100) break;
     const pay = Math.min(remaining * 0.6, d.balance);
     if (pay > 50) {
-      items.push({ label: `Pay ${d.name}`, amount: Math.round(pay), reason: `${d.apr}% APR -- good return` });
+      items.push({ label: `Pay ${d.name}`, amount: Math.round(pay), reason: `${d.apr}% APR, good return` });
       remaining -= pay;
     }
   }
@@ -147,7 +147,7 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
       const greetings = {
         morning: [
           `Morning ${name}! ☀️ Ready to make moves today?`,
-          `Hey ${name}! You're up early -- let's see where things stand.`,
+          `Hey ${name}! You're up early! Let's see where things stand.`,
           `Good morning ${name}! Finn here. What are we working on today?`,
         ],
         afternoon: [
@@ -156,10 +156,10 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
         ],
         evening: [
           `Hey ${name}! Good time to check in before tomorrow.`,
-          `Evening ${name} -- wrapping up the day? Let's take a look at your numbers.`,
+          `Evening ${name}, wrapping up the day? Let's take a look at your numbers.`,
         ],
         night: [
-          `Hey ${name} -- still up? I got you. What's on your mind?`,
+          `Hey ${name}, still up? I got you. What's on your mind?`,
           `Late night check-in, ${name}? Whatever it is, let's sort it out.`,
         ],
       };
@@ -186,7 +186,7 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
       const parts: string[] = [];
       parts.push(`Here's your full picture, ${name}:`);
       parts.push(`\n\n**Net worth:** ${formatCurrency(netWorth)} ${netWorth >= 0 ? '📈' : ''}`);
-      if (debtCount > 0) parts.push(`**Total debt:** ${formatCurrency(totalDebt)} across ${debtCount} account${debtCount > 1 ? 's' : ''} -- debt-free in **${formatMonths(debtFreeMonths)}** at current pace`);
+      if (debtCount > 0) parts.push(`**Total debt:** ${formatCurrency(totalDebt)} across ${debtCount} account${debtCount > 1 ? 's' : ''} , debt-free in **${formatMonths(debtFreeMonths)}** at current pace`);
       if (goalCount > 0) parts.push(`**Goals:** ${goalCount} active goal${goalCount > 1 ? 's' : ''} in progress`);
       if (savingsRate > 0) parts.push(`**Savings rate:** ${savingsRate}% of income`);
       if (data.profile?.streak && data.profile.streak > 1) parts.push(`\n✓ You've been on plan for **${data.profile.streak} days** straight.`);
@@ -211,8 +211,8 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
       const acceleratedMonths = computeDebtFreeMonths(data.debts, 200);
 
       const variants = [
-        `Your highest-cost debt is your **${topDebt.name}** at **${topDebt.apr}% APR** -- that's costing you **${formatCurrency(monthlyInterest)}/month** in interest alone.\n\nAt your current payment rate, you'll be debt-free in **${formatMonths(debtFreeMonths)}**. Adding just $200/month extra cuts that to **${formatMonths(acceleratedMonths)}** and saves you significant interest.`,
-        `Let me break down your debt picture. Your **${topDebt.name}** has the highest interest rate at **${topDebt.apr}%** -- every month you carry that balance costs you **${formatCurrency(monthlyInterest)}** in interest.\n\nWith the avalanche method (highest rate first), you're debt-free in **${formatMonths(debtFreeMonths)}**.`,
+        `Your highest-cost debt is your **${topDebt.name}** at **${topDebt.apr}% APR**, costing you **${formatCurrency(monthlyInterest)}/month** in interest alone.\n\nAt your current payment rate, you'll be debt-free in **${formatMonths(debtFreeMonths)}**. Adding just $200/month extra cuts that to **${formatMonths(acceleratedMonths)}** and saves you significant interest.`,
+        `Let me break down your debt picture. Your **${topDebt.name}** has the highest interest rate at **${topDebt.apr}%**. Every month you carry that balance costs you **${formatCurrency(monthlyInterest)}** in interest.\n\nWith the avalanche method (highest rate first), you're debt-free in **${formatMonths(debtFreeMonths)}**.`,
       ];
 
       return {
@@ -224,7 +224,7 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
     case 'BUDGET_STATUS': {
       if (!data.budget?.categories?.length) {
         return {
-          content: `You haven't set up your budget categories yet, ${name}. That's the first step -- takes about 2 minutes. Want to set it up now?`,
+          content: `You haven't set up your budget categories yet, ${name}. That's the first step, takes about 2 minutes. Want to set it up now?`,
           chips: ['Set up my budget', 'How am I doing overall?'],
         };
       }
@@ -238,11 +238,11 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
       const overCategories = data.budget?.categories?.filter(c => c.spent > c.budgeted);
 
       let response = `You've spent **${formatCurrency(totalSpent)}** of your **${formatCurrency(totalBudgeted)}** monthly budget.\n\n`;
-      response += `**${formatCurrency(remaining)} remaining** with ${daysLeft} days left -- that's **${formatCurrency(dailyBudget)}/day** to stay on track.`;
+      response += `**${formatCurrency(remaining)} remaining** with ${daysLeft} days left, that's **${formatCurrency(dailyBudget)}/day** to stay on track.`;
       if (overCategories.length) {
         response += `\n\n⚠️ Over budget in: ${overCategories.map(c => `**${c.name}** (+${formatCurrency(c.spent - c.budgeted)})`).join(', ')}`;
       } else {
-        response += `\n\n✓ All categories on track -- well done.`;
+        response += `\n\n✓ All categories on track. Well done.`;
       }
 
       return {
@@ -254,14 +254,14 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
     case 'GOAL_STATUS': {
       if (!data.goals.length) {
         return {
-          content: `You haven't set any goals yet, ${name}. Goals are literally the whole point of Sayvings. Want to add your first one -- even something simple like an emergency fund?`,
+          content: `You haven't set any goals yet, ${name}. Goals are literally the whole point of Sayvings. Want to add your first one? Even something simple like an emergency fund.`,
           chips: ['Add emergency fund goal', 'Add house down payment goal', 'See goal options'],
         };
       }
       const goalLines = data.goals.map(g => {
         const months = computeGoalMonths(g);
         const pct = Math.min(100, Math.round((g.currentAmount / g.targetAmount) * 100));
-        return `**${g.name}:** ${formatCurrency(g.currentAmount)} of ${formatCurrency(g.targetAmount)} (${pct}%) -- ${formatMonths(months)} to go`;
+        return `**${g.name}:** ${formatCurrency(g.currentAmount)} of ${formatCurrency(g.targetAmount)} (${pct}%), ${formatMonths(months)} to go`;
       });
       return {
         content: `Here's how your goals are tracking, ${name}:\n\n${goalLines.join('\n')}`,
@@ -273,16 +273,16 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
       const amount = parseAmount(message);
       if (!amount) {
         return {
-          content: `Nice -- extra money is always an opportunity! How much are we working with? Tell me the amount and I'll show you the best way to split it based on your situation.`,
+          content: `Nice, extra money is always an opportunity! How much are we working with? Tell me the amount and I'll show you the best way to split it based on your situation.`,
           chips: ['$500', '$1,000', '$2,000', '$5,000'],
         };
       }
       const allocation = allocateWindfall(amount, data);
       let response = `Here's how I'd recommend allocating **${formatCurrency(amount)}** based on your current situation:\n\n`;
       for (const item of allocation.items) {
-        response += `• **${formatCurrency(item.amount)} → ${item.label}** -- ${item.reason}\n`;
+        response += `• **${formatCurrency(item.amount)} → ${item.label}**: ${item.reason}\n`;
       }
-      response += `\nThis order maximizes your financial progress -- highest guaranteed return first, then safety net, then goals.`;
+      response += `\nThis order maximizes your financial progress, highest guaranteed return first, then safety net, then goals.`;
       return {
         content: response,
         chips: ['What if I put it all on debt?', 'Update my plan with this', 'Show interest I would save', 'What about investing it?'],
@@ -295,12 +295,12 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
       if (emergencyGoal && emergencyGoal.currentAmount > 0) {
         const coverage = monthlyIncome > 0 ? (emergencyGoal.currentAmount / monthlyIncome).toFixed(1) : '?';
         return {
-          content: `Hey ${name} -- this is exactly what your emergency fund is for. You have **${formatCurrency(emergencyGoal.currentAmount)}** saved (${coverage} months of coverage).\n\n${amount ? `For a **${formatCurrency(amount)}** expense, that leaves you **${formatCurrency(emergencyGoal.currentAmount - amount)}** after.` : ''}\n\nUse the emergency fund. That's not a setback -- that's the system working. Then we rebuild it together.`,
+          content: `Hey ${name}, this is exactly what your emergency fund is for. You have **${formatCurrency(emergencyGoal.currentAmount)}** saved (${coverage} months of coverage).\n\n${amount ? `For a **${formatCurrency(amount)}** expense, that leaves you **${formatCurrency(emergencyGoal.currentAmount - amount)}** after.` : ''}\n\nUse the emergency fund. That's not a setback, that's the system working. Then we rebuild it together.`,
           chips: ['How do I rebuild fast?', 'Update my emergency fund balance', 'Adjust my monthly contribution'],
         };
       }
       return {
-        content: `That's stressful, ${name} -- and I want to help you handle it without derailing your plan.\n\nYou don't have an emergency fund recorded yet. For right now: pause any extra debt payments this month and redirect that cash to cover this expense. Then let's make building a $1,000 safety cushion your top priority -- it'll protect you next time.`,
+        content: `That's stressful, ${name}, and I want to help you handle it without derailing your plan.\n\nYou don't have an emergency fund recorded yet. For right now: pause any extra debt payments this month and redirect that cash to cover this expense. Then let's make building a $1,000 safety cushion your top priority. It'll protect you next time.`,
         chips: ['Add emergency fund goal', 'How much should I pause?', 'See my options'],
       };
     }
@@ -321,9 +321,9 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
       response += `**Monthly contribution:** ${formatCurrency(contribMonthly)}/mo\n`;
       response += `**Years to retirement:** ${yearsToRetire}\n\n`;
       if (matchPct > 0 && contribMonthly * 12 < (data.profile?.monthlyIncome ?? 0) * 12 * matchPct / 100) {
-        response += `⚠️ You may be leaving **employer match** on the table. Your employer matches up to ${matchPct}% -- contributing at least that amount is an **instant 50-100% return**.`;
+        response += `⚠️ You may be leaving **employer match** on the table. Your employer matches up to ${matchPct}%, so contributing at least that amount is an **instant 50-100% return**.`;
       } else {
-        response += `✓ You're capturing your full employer match -- that's the most important first step.`;
+        response += `✓ You're capturing your full employer match, which is the most important first step.`;
       }
       return {
         content: response,
@@ -345,7 +345,7 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
         .slice(0, 4);
       const billLines = upcoming.map(b => {
         const urgency = b.daysUntil <= 2 ? '🔴' : b.daysUntil <= 5 ? '🟡' : '🟢';
-        return `${urgency} **${b.name}** -- ${formatCurrency(b.amount)} due in ${b.daysUntil} day${b.daysUntil !== 1 ? 's' : ''}`;
+        return `${urgency} **${b.name}**, ${formatCurrency(b.amount)} due in ${b.daysUntil} day${b.daysUntil !== 1 ? 's' : ''}`;
       });
       return {
         content: `Here are your upcoming bills:\n\n${billLines.join('\n')}`,
@@ -383,7 +383,7 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
         };
       }
       return {
-        content: `I can run that scenario for you -- just give me a bit more detail. What number are you thinking about changing, and by how much?`,
+        content: `I can run that scenario for you, just give me a bit more detail. What number are you thinking about changing, and by how much?`,
         chips: ['Extra $200/month on debt', 'What if I got a $500 raise?', 'What if I cut expenses $300?'],
       };
     }
@@ -391,12 +391,12 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
     case 'MOTIVATION': {
       const wins: string[] = [];
       if (data.profile?.streak && data.profile.streak > 1) wins.push(`${data.profile.streak} days on your plan`);
-      if (totalDebt > 0) wins.push(`you've chosen to face your debt head-on -- most people don't`);
+      if (totalDebt > 0) wins.push(`you've chosen to face your debt head-on, most people don't`);
       if (data.goals.length > 0) wins.push(`you have ${data.goals.length} active goal${data.goals.length > 1 ? 's' : ''} in motion`);
 
       const winStr = wins.length > 0 ? `\n\nHere's what's true right now: ${wins.join(', ')}.` : '';
       return {
-        content: `Hey ${name} -- real talk: money stress is heavy and I get it. You're not alone in this.${winStr}\n\nHere's the move: forget the whole plan for a second. What's just the ONE next thing you can do today? Not tomorrow -- today. That's it. That's the whole goal right now.`,
+        content: `Hey ${name}, real talk: money stress is heavy and I get it. You're not alone in this.${winStr}\n\nHere's the move: forget the whole plan for a second. What's just the ONE next thing you can do today? Not tomorrow, today. That's it. That's the whole goal right now.`,
         chips: ["What's my one thing today?", 'Show me a win', 'How close am I to a goal?', 'Just talk'],
       };
     }
@@ -406,7 +406,7 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
         ? Math.round((data.goals.reduce((s,g) => s + g.monthlyContribution, 0) / monthlyIncome) * 100)
         : 0;
       return {
-        content: `Here's some real context, ${name}:\n\n• **Average US savings rate:** ~3.5% -- ${savingsRate >= 3 ? `you're at ${savingsRate}%, which is ${savingsRate > 3.5 ? 'above' : 'around'} average` : `a goal to work toward`}\n• **Average credit card debt:** ~$6,500\n• **Average emergency fund coverage:** 1.2 months\n\nComparisons are tricky -- they show you the middle, not the direction. What matters is whether *your* numbers are moving the right way. And based on what you've shared, you're working on it.`,
+        content: `Here's some real context, ${name}:\n\n• **Average US savings rate:** ~3.5%, ${savingsRate >= 3 ? `you're at ${savingsRate}%, which is ${savingsRate > 3.5 ? 'above' : 'around'} average` : `a goal to work toward`}\n• **Average credit card debt:** ~$6,500\n• **Average emergency fund coverage:** 1.2 months\n\nComparisons are tricky, they show you the middle, not the direction. What matters is whether *your* numbers are moving the right way. And based on what you've shared, you're working on it.`,
         chips: ['Am I saving enough?', 'How do I improve my savings rate?', 'Show my net worth progress'],
       };
     }
@@ -416,7 +416,7 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
       const savingsRate = monthlyIncome > 0 ? Math.round((totalContributions / monthlyIncome) * 100) : 0;
       const target = 20;
       return {
-        content: `Your current savings rate is **${savingsRate}%** of your monthly income.\n\n${savingsRate >= target ? `✓ You're at or above the recommended ${target}% -- solid.` : `The recommended target is ${target}%. You're contributing ${formatCurrency(totalContributions)}/month -- increasing by ${formatCurrency(Math.round((monthlyIncome * (target / 100)) - totalContributions))} more would get you there.`}`,
+        content: `Your current savings rate is **${savingsRate}%** of your monthly income.\n\n${savingsRate >= target ? `✓ You're at or above the recommended ${target}%, solid.` : `The recommended target is ${target}%. You're contributing ${formatCurrency(totalContributions)}/month, and increasing by ${formatCurrency(Math.round((monthlyIncome * (target / 100)) - totalContributions))} more would get you there.`}`,
         chips: ['How do I save more?', 'What should I cut?', 'Show my budget gaps'],
       };
     }
@@ -427,7 +427,7 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
       const bills = data.bills.reduce((s,b) => s + b.amount, 0);
       const discretionary = monthlyIncome - debtPayments - goalContributions - bills;
       return {
-        content: `Here's how to think about your next paycheck of **${formatCurrency(monthlyIncome)}**:\n\n1. **Bills & fixed expenses:** ${formatCurrency(bills)}\n2. **Debt minimum payments:** ${formatCurrency(debtPayments)}\n3. **Goal contributions:** ${formatCurrency(goalContributions)}\n4. **Remaining for discretionary:** ${formatCurrency(Math.max(0, discretionary))}\n\n${discretionary < 0 ? `⚠️ Your fixed obligations exceed your income -- let's look at where to adjust.` : `✓ Your obligations are covered with ${formatCurrency(discretionary)} left for flexible spending.`}`,
+        content: `Here's how to think about your next paycheck of **${formatCurrency(monthlyIncome)}**:\n\n1. **Bills & fixed expenses:** ${formatCurrency(bills)}\n2. **Debt minimum payments:** ${formatCurrency(debtPayments)}\n3. **Goal contributions:** ${formatCurrency(goalContributions)}\n4. **Remaining for discretionary:** ${formatCurrency(Math.max(0, discretionary))}\n\n${discretionary < 0 ? `⚠️ Your fixed obligations exceed your income, let's look at where to adjust.` : `✓ Your obligations are covered with ${formatCurrency(discretionary)} left for flexible spending.`}`,
         chips: ['Can I increase my debt payment?', 'How do I optimize this?', 'Add extra to a goal', 'Show my budget'],
       };
     }
@@ -436,7 +436,7 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
       return {
         content: pick([
           `Anytime, ${name}! That's literally what I'm here for. What else you got?`,
-          `Of course! You're doing great -- seriously. What else is on your mind?`,
+          `Of course! You're doing great, seriously. What else is on your mind?`,
           `Always. You're making moves, ${name}. Keep it up. Anything else?`,
         ]),
         chips: ['How am I doing overall?', 'Check my debt', 'View my goals'],
@@ -446,7 +446,7 @@ function buildResponse(intent: Intent, message: string, data: ClarityData, lastI
     default: {
       return {
         content: pick([
-          `Hmm, I'm not sure I got that one -- but I'm really good at money stuff, ${name}. What do you want to check?`,
+          `Hmm, I'm not sure I got that one, but I'm really good at money stuff, ${name}. What do you want to check?`,
           `Ha, that one's a bit out of my lane! I stick to your finances. What do you want to dig into?`,
           `I didn't catch that, but I'm here for your money questions. What's on your mind?`,
         ]),
@@ -489,10 +489,10 @@ export function getWelcomeMessage(data: ClarityData): { content: string; chips: 
   const greeting = tod === 'morning' ? `Morning ${name}! ☀️`
     : tod === 'afternoon' ? `Hey ${name}!`
     : tod === 'evening' ? `Evening ${name}!`
-    : `Hey ${name} -- late night, I see 👀`;
+    : `Hey ${name}, late night, I see 👀`;
 
   const hook = totalDebt > 0
-    ? ` You're ${formatCurrency(Math.abs(netWorth))} away from a positive net worth -- we'll get there. What do you want to tackle?`
+    ? ` You're ${formatCurrency(Math.abs(netWorth))} away from a positive net worth. We'll get there. What do you want to tackle?`
     : ` Your net worth is sitting at ${formatCurrency(netWorth)} and climbing. Nice work. What's on your mind?`;
 
   return {

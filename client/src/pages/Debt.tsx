@@ -138,8 +138,8 @@ export default function DebtPage() {
   }
 
   const strategies = [
-    { id: "avalanche" as Strategy, icon: Zap, label: "Avalanche", emoji: "⚡", desc: "Pay highest APR first -- saves the most money in interest." },
-    { id: "snowball" as Strategy, icon: Snowflake, label: "Snowball", emoji: "❄️", desc: "Pay smallest balance first -- builds momentum and motivation." },
+    { id: "avalanche" as Strategy, icon: Zap, label: "Avalanche", emoji: "⚡", desc: "Pay highest APR first. Saves the most money in interest." },
+    { id: "snowball" as Strategy, icon: Snowflake, label: "Snowball", emoji: "❄️", desc: "Pay smallest balance first. Builds momentum and motivation." },
     { id: "hybrid" as Strategy, icon: BarChart3, label: "Hybrid", emoji: "📊", desc: "Pay high-APR small debts first, then attack largest balances." },
   ];
 
